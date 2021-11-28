@@ -1,5 +1,4 @@
 const Discord = require("discord.js");
-const { Resolver } = require("dns");
 const Express = require("express");
 const REST = Express();
 const http = require('http');
@@ -7,7 +6,6 @@ const NodeCache = require("node-cache")
 
 const Cache = new NodeCache();
 const Config = require("./config.json");
-const Package = require("./package.json");
 const Client = new Discord.Client( { intents: ["GUILDS", "GUILD_MESSAGES", "GUILD_WEBHOOKS"] });
 const DateObj = new Date();
 
@@ -49,7 +47,6 @@ async function SendMessage(sAvatarUrl, sName, sContent) {
 /*
     Discord bot
 */
-
 Client.on("ready", async () => {
     WriteLog(LogType.Discord, "client ready, initializing bot");
 
