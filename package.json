@@ -1,0 +1,12 @@
+{
+    "name": "GMDR",
+    "version": "1.0.0",
+    "description": "Server in charge of handling interactions with discord's api",
+    "author": "nahu",
+    "main": "index.js",
+    "dependencies": {
+        "discord.js": "^13.3.1",
+        "express": "^4.17.1",
+        "node-cache": "^5.1.2"
+    }
+}
