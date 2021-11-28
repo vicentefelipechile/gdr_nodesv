@@ -93,7 +93,7 @@ Client.on("messageCreate", Message => {
 
     var sMsgUrl = Message.attachments.first()?.url;
     if (sMsgUrl && (sMsgUrl.endsWith(".jpg") || sMsgUrl.endsWith(".png"))) {
-        WriteLog(LogType.Chat, Message.author.tag + ": " +  Message.content + " " + sMsgUrl);
+        WriteLog(LogType.Chat, Message.author.tag + ": " +  Message.content + "\n" + sMsgUrl);
         aMsgCache.push([
             Message.author.tag,
             Message.content + " " + sMsgUrl
