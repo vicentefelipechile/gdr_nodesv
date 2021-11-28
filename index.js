@@ -36,10 +36,14 @@ function WriteLog( eLogType, sLogMessage ) {
 */
 var Webhook = null;
 
+const MentionRegex = new RegExp("@[^ ]+", "g");
 async function SendMessage(sAvatarUrl, sName, sContent) {
+    if (sContent.length < 1)
+        return;
+
     Webhook.send({
         username: sName,
-        content: sContent,
+        content: sContent.replaceAll(MentionRegex, "<mention>"),
         avatarURL: sAvatarUrl
     });
 }
