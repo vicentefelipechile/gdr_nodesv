@@ -12,8 +12,8 @@ Allow Discord users to talk with in-game users on Garry's mod.
 1 - Clone both the [addon](https://github.com/44lr/gdr_addon) and the [node server](https://github.com/44lr/gdr_nodesv).\
 2 - Copy the addon into your server's addons folder.\
 3 - on gdr_addon/lua/gdr/sv_config.lua, set your settings accordingly\
-4 - on gdr_nodesv/config.json, also set your settings accordingly.\
-5 - On a terminal / cmd instance, cd into the folder where you downloaded gdr_nodesv and run **npm install**\
+4 - on gdr_nodesv/config_template.json, also set your settings accordingly, *and rename it to config.json*.\
+5 - On a terminal / cmd instance, cd into the folder where you downloaded gdr_nodesv and run **npm install**
 
 ## How to run
 1 - On a terminal / cmd instance, cd into where you downloaded gdr_nodesv, and run **node index.js**\
