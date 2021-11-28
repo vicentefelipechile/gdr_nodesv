@@ -91,6 +91,16 @@ Client.on("messageCreate", Message => {
     if (Message.author.bot) return;
     if (Message.channelId != Config.ChannelId) return;
 
+    var sMsgUrl = Message.attachments.first()?.url;
+    if (sMsgUrl && (sMsgUrl.endsWith(".jpg") || sMsgUrl.endsWith(".png"))) {
+        WriteLog(LogType.Chat, Message.author.tag + ": " +  Message.content + " " + sMsgUrl);
+        aMsgCache.push([
+            Message.author.tag,
+            Message.content + " " + sMsgUrl
+        ]);
+        return;
+    }
+
     WriteLog(LogType.Chat, Message.author.tag + ": " + Message.content);
     aMsgCache.push([
         Message.author.tag,
