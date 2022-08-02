@@ -48,6 +48,17 @@ async function SendMessage(sAvatarUrl, sName, sContent) {
     });
 }
 
+async function SendMessageHook(img, name, text) {
+    if (text.length < 1)
+        return;
+
+    Webhook.send({
+        username: name,
+        content: text.replaceAll(MentionRegex, "<mention>"),
+        avatarURL: img
+    });
+}
+
 /*
     Discord bot
 */
@@ -177,6 +188,17 @@ REST.post("/sendmessage", async (Request, Response) => {
 
     var sAvatar = await GetAvatar(MsgInfo[0]);
     SendMessage(sAvatar, MsgInfo[1], MsgInfo[2]);
+});
+
+REST.post("/sendmessagehook", async (Request, Response) => {
+    if (Request.hostname != Config.SrcdsIp) {
+        Response.end();
+        return;
+    }
+
+    var MsgInfo = Request.body;
+    Response.end();
+    SendMessageHook(MsgInfo[0], MsgInfo[1], MsgInfo[2]);
 });
 
 var Server = REST.listen(Config.Port, () => {
