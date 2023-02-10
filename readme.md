@@ -9,7 +9,7 @@ Allow Discord users to talk with in-game users on Garry's mod.
 - A Discord bot, which has been invited to your server and has the following permissions:  Manage Webhooks, Send Messages and View Channel.
 
 ## How to install
-1 - Clone both the [addon](https://github.com/SuperCALIENTITO/gdr_addon) and the [node server](https://github.com/SuperCALIENTITO/gdr_nodesv).\
+1 - Clone both the [addon](https://github.com/vicentefelipechile/gdr_addon) and the [node server](https://github.com/vicentefelipechile/gdr_nodesv).\
 2 - Copy the addon into your server's addons folder.\
 3 - On gdr_addon/lua/gdr/sv_config.lua, set your settings accordingly\
 4 - On gdr_nodesv/config_template.json, also set your settings accordingly, *and rename it to config.json*.\
