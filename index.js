@@ -166,13 +166,24 @@ async function GetAvatar(sSID64) {
 /*
     Rest server
 */
+
 REST.get("/getmessages", (Request, Response) => {
+    if (Request.ip != Config.IP) {
+        Response.status(403).send("Forbidden")
+        return
+    }
+
     Response.send(JSON.stringify(aMsgCache))
     aMsgCache = []
 })
 
 REST.use(Express.json())
 REST.post("/sendmessage", async (Request, Response) => {
+    if (Request.ip != Config.IP) {
+        Response.status(403).send("Forbidden")
+        return
+    }
+
     var MsgInfo = Request.body
     Response.end()
 
@@ -181,6 +192,11 @@ REST.post("/sendmessage", async (Request, Response) => {
 })
 
 REST.post("/sendmessagehook", async (Request, Response) => {
+    if (Request.ip != Config.IP) {
+        Response.status(403).send("Forbidden")
+        return
+    }
+
     var MsgInfo = Request.body
     Response.end()
     SendMessageHook(MsgInfo[0], MsgInfo[1], MsgInfo[2])

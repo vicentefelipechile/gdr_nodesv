@@ -3,5 +3,6 @@
     "Port": 1337,
     "ChannelId": "111111111111111111",
     "SteamKey": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-    "SrcdsIp": "127.0.0.1"
+    "SrcdsIp": "127.0.0.1",
+    "IP": "34.176.1.146"
 }
