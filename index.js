@@ -1,19 +1,24 @@
-const Discord = require("discord.js")
-const Express = require("express")
-const REST = Express()
-const http = require('http')
-const NodeCache = require("node-cache")
+/*==================================================
+            Gmod Relay Discord - Node.js
+==================================================*/
 
+import { Client as _Client } from "discord.js"
+import Express, { json } from "express"
+import NodeCache from "node-cache"
+import { request } from 'http'
+import { ChannelId, Token, SteamKey, IP, Port } from "./config.json"
+
+
+
+/*==========================
+        Main Constants
+==========================*/
+
+const REST = Express()
 const Cache = new NodeCache()
-const Config = require("./config.json")
-const Client = new Discord.Client( { intents: ["GUILDS", "GUILD_MESSAGES", "GUILD_WEBHOOKS"] })
+const Client = new _Client( { intents: ["GUILDS", "GUILD_MESSAGES", "GUILD_WEBHOOKS"] })
 const DateObj = new Date()
 
-var aMsgCache = []
-
-/*
-    Logger
-*/
 const LogType = {
 	Discord: "\x1b[31m [Discord] \x1b[39m",
 	Chat: "\x1b[36m [Chat] \x1b[39m",
@@ -21,128 +26,148 @@ const LogType = {
     Error: "\x1b[31m [Error] \x1b[39m"
 }
 
-function WriteLog( eLogType, sLogMessage ) {
-	if (!eLogType in LogType)
-		throw new error("invalid log type")
 
-	var sHours = DateObj.getHours()
-	var sMinutes = DateObj.getMinutes()
-	var sSeconds = DateObj.getSeconds()
-	console.log(sHours + ":" + sMinutes + ":" + sSeconds + " -" + eLogType + sLogMessage)
+
+/*==========================
+        Main Functions
+==========================*/
+
+var MessageList = []
+var GDR = {}
+
+GDR.GetTime = () => { return DateObj.getHours() + ":" + DateObj.getMinutes() + ":" + DateObj.getSeconds() }
+
+GDR.WriteLog = (eLogType, sLogMessage) => {
+    if (!eLogType in LogType)
+        eLogType = LogType.Error
+
+    var CurrentTime = GDR.GetTime()
+    console.log(CurrentTime + " -" + eLogType + sLogMessage)
 }
 
-/*
-    Webhook
-*/
+
+
+/*==========================
+         Discord bot
+==========================*/
+
 var Webhook = null
 
-const MentionRegex = new RegExp("@[^ ]+", "g")
-async function SendMessage(sAvatarUrl, sName, sContent) {
-    if (sContent.length < 1)
-        return
-
-    Webhook.send({
-        username: sName,
-        content: sContent.replaceAll(MentionRegex, "<mention>"),
-        avatarURL: sAvatarUrl
-    })
-}
-
-async function SendMessageHook(img, name, text) {
-    if (text.length < 1)
-        return
-
-    Webhook.send({
-        username: name,
-        content: text.replaceAll(MentionRegex, "<mention>"),
-        avatarURL: img
-    })
-}
-
-/*
-    Discord bot
-*/
-Client.on("ready", async () => {
-    WriteLog(LogType.Discord, "client ready, initializing bot")
-
-    var MsgChannel = Client.channels.cache.get(Config.ChannelId)
-    
-    if (!MsgChannel)
-        throw new Error("invalid channel id")
-
-    WriteLog(LogType.Discord, "reading and sending messages to channel: " + MsgChannel.name)
-
-    var ChannelPerms = MsgChannel.guild.members.me.permissionsIn(MsgChannel)
+GDR.CheckChannelPerms = (Channel) => {
+    var ChannelPerms = Channel.guild.members.me.permissionsIn(Channel)
 
     if (!ChannelPerms.has("VIEW_CHANNEL"))
-        throw new error("not allowed to view channel")
+        throw new Error("not allowed to view channel")
 
     if (!ChannelPerms.has("MANAGE_WEBHOOKS"))
         throw new Error("not allowed to manage webhooks")
 
     if (!ChannelPerms.has("SEND_MESSAGES"))
         throw new Error("not allowed to send messages")
+}
+
+GDR.CheckMessage = (Message) => {
+    if (Message.author.bot) return false
+    if (Message.channelId != ChannelId) return false
+
+    return true
+}
+
+GDR.SendMessage = async (sAvatarUrl, sName, sContent) => {
+    if (sContent.length < 1)
+        return
+
+    Webhook.send({
+        username: sName,
+        content: sContent,
+        avatarURL: sAvatarUrl
+    })
+}
+
+GDR.SendMessageHook = async (img, name, text) => {
+    if (text.length < 1)
+        return
+
+    Webhook.send({
+        username: name,
+        content: text,
+        avatarURL: img
+    })
+}
+
+GDR.OnReady = async () => {
+    GDR.WriteLog(LogType.Discord, "client ready, initializing bot")
+
+    var MsgChannel = Client.channels.cache.get(ChannelId)
+    if (!MsgChannel) { throw new Error("invalid channel id") }
+
+    GDR.WriteLog(LogType.Discord, "reading and sending messages to channel: " + MsgChannel.name)
+    GDR.CheckChannelPerms(MsgChannel)
 
     var Webhooks = await MsgChannel.fetchWebhooks()
 
-    WriteLog(LogType.Discord, "getting webhook")
+    GDR.WriteLog(LogType.Discord, "getting webhook")
 
     Webhook = Webhooks.find(TmpWebhook => TmpWebhook.name == "GDR")
     if (!Webhook) {
-        WriteLog(LogType.Discord, "webhook does not exist, creating a new one")
+        GDR.WriteLog(LogType.Discord, "webhook does not exist, creating a new one")
         MsgChannel.createWebhook("GDR", {
             avatar: "",
             reason: "GM Discord Relay webhook"
         })
     }
 
-    WriteLog(LogType.Discord, "bot ready")
-})
+    GDR.WriteLog(LogType.Discord, "bot ready")
+}
 
-Client.on("messageCreate", Message => {
-    if (Message.author.bot) return
-    if (Message.channelId != Config.ChannelId) return
+GDR.OnMessage = (Message) => {
+    if (!GDR.CheckMessage(Message)) return
 
     var sMsgUrl = Message.attachments.first()?.url ?? Message.stickers.first()?.url
     if (sMsgUrl && (sMsgUrl.endsWith(".jpg") || sMsgUrl.endsWith(".png"))) {
-        WriteLog(LogType.Chat, Message.member.displayName + ": " +  Message.cleanContent + "\n" + sMsgUrl)
-        aMsgCache.push([
+        GDR.WriteLog(LogType.Chat, Message.member.displayName + ": " +  Message.cleanContent + "\n" + sMsgUrl)
+        MessageList.push([
             Message.member.displayName,
             Message.cleanContent + " " + sMsgUrl
         ])
         return
     }
 
-    WriteLog(LogType.Chat, Message.member.displayName + ": " + Message.cleanContent)
-    aMsgCache.push([
+    GDR.WriteLog(LogType.Chat, Message.member.displayName + ": " + Message.cleanContent)
+    MessageList.push([
         Message.member.displayName,
         Message.cleanContent
     ])
-})
+}
 
-Client.on("error", (sError) => {
-    WriteLog(LogType.Error, "client error:" + sError)
-})
+GDR.OnError = (sError) => {
+    GDR.WriteLog(LogType.Error, "client error:" + sError)
+}
 
-Client.login(Config.Token)
+/*
+    Discord bot
+*/
+Client.on("ready", GDR.OnReady)
+Client.on("messageCreate", GDR.OnMessage)
+Client.on("error", GDR.OnError)
+Client.login(Token)
 
 /*
     Steam avatar stuff
 */
-async function GetAvatar(sSID64) {
-    var sAvatarURL = Cache.get(sSID64)
-    if (sAvatarURL)
-        return sAvatarURL
 
-    var ReqOptions = {
+GDR.GenerateReqOptions = (sSID64) => {
+    return {
         hostname: "api.steampowered.com",
-        path: "/ISteamUser/GetPlayerSummaries/v0002/?key=" + Config.SteamKey + "&steamids=" + sSID64,
+        path: "/ISteamUser/GetPlayerSummaries/v0002/?key=" + SteamKey + "&steamids=" + sSID64,
         method: "GET"
     }
+}
 
-    var ReqPromise = new Promise( (Resolve, Reject) => {
+GDR.RequestPromise = (ReqOptions) => {
+    return new Promise( (Resolve, Reject) => {
         var sResponse = ""
-        http.request(ReqOptions, Response => {
+        request(ReqOptions, Response => {
             Response.on("data", Data => {
                 sResponse += Data
             })
@@ -152,11 +177,21 @@ async function GetAvatar(sSID64) {
             })
 
             Response.on("error", sError => {
-                WriteLog(LogType.Error, "steam api request failed:" + sError)
+                GDR.WriteLog(LogType.Error, "steam api request failed:" + sError)
                 Reject(sError)
             })
         }).end()
     })
+}
+
+
+GDR.GetAvatar = async (sSID64) => {
+    var sAvatarURL = Cache.get(sSID64)
+    if (sAvatarURL)
+        return sAvatarURL
+
+    var ReqOptions = GDR.GenerateReqOptions(sSID64)
+    var ReqPromise = GDR.RequestPromise(ReqOptions)
 
     var Response = await ReqPromise
     Cache.set(sSID64, Response.response.players[0].avatarfull)
@@ -168,18 +203,18 @@ async function GetAvatar(sSID64) {
 */
 
 REST.get("/getmessages", (Request, Response) => {
-    if (Request.ip != Config.IP) {
+    if (Request.ip != IP) {
         Response.status(403).send("Forbidden")
         return
     }
 
-    Response.send(JSON.stringify(aMsgCache))
-    aMsgCache = []
+    Response.send(JSON.stringify(MessageList))
+    MessageList = []
 })
 
-REST.use(Express.json())
+REST.use(json())
 REST.post("/sendmessage", async (Request, Response) => {
-    if (Request.ip != Config.IP) {
+    if (Request.ip != IP) {
         Response.status(403).send("Forbidden")
         return
     }
@@ -192,7 +227,7 @@ REST.post("/sendmessage", async (Request, Response) => {
 })
 
 REST.post("/sendmessagehook", async (Request, Response) => {
-    if (Request.ip != Config.IP) {
+    if (Request.ip != IP) {
         Response.status(403).send("Forbidden")
         return
     }
@@ -202,6 +237,6 @@ REST.post("/sendmessagehook", async (Request, Response) => {
     SendMessageHook(MsgInfo[0], MsgInfo[1], MsgInfo[2])
 })
 
-var Server = REST.listen(Config.Port, () => {
+var Server = REST.listen(Port, () => {
     WriteLog(LogType.Rest, "server ready, listening on port " + Server.address().port)
 })
