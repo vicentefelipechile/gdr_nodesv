@@ -33,14 +33,16 @@ enum LogType {
 ==========================*/
 
 class GDRClient extends Client {
-    constructor({ChannelID, SteamKey}) {
-        super({intents: ["Guilds", "GuildMessages", "GuildWebhooks"]});
+    public constructor({ChannelID, SteamKey}) {
+        super({
+            intents: ["Guilds", "GuildMessages", "GuildWebhooks"]}
+        );
         this.ChannelID = ChannelID;
         this.SteamKey = SteamKey;
     }
 
-    public ChannelID: any;
-    public SteamKey: any;
+    public ChannelID: string;
+    public SteamKey: string;
     public Webhook: Webhook;
 
     public GetTime(): string {
@@ -193,7 +195,7 @@ GDR.login(Token);
           SERVER
 ==========================*/
 
-REST.get("/getmessages", (Request: { ip: any }, Response: { status: (arg0: number) => { (): any; new(): any; send: { (arg0: string): void; new(): any } }; send: (arg0: string) => void }) => {
+REST.get("/getmessages", async (Request, Response) => {
     if (Request.ip != IP) {
         Response.status(403).send("Forbidden");
         return;
@@ -204,7 +206,7 @@ REST.get("/getmessages", (Request: { ip: any }, Response: { status: (arg0: numbe
 })
 
 REST.use(json())
-REST.post("/sendmessage", async (Request: { ip: any; body: any }, Response: { status: (arg0: number) => { (): any; new(): any; send: { (arg0: string): void; new(): any } }; end: () => void }) => {
+REST.post("/sendmessage", async (Request, Response) => {
     if (Request.ip != IP) {
         Response.status(403).send("Forbidden");
         return;
@@ -217,7 +219,7 @@ REST.post("/sendmessage", async (Request: { ip: any; body: any }, Response: { st
     GDR.SendMessage(sAvatar, MsgInfo[1], MsgInfo[2]);
 })
 
-REST.post("/sendmessagehook", async (Request: { ip: any; body: any }, Response: { status: (arg0: number) => { (): any; new(): any; send: { (arg0: string): void; new(): any } }; end: () => void }) => {
+REST.post("/sendmessagehook", async (Request, Response) => {
     if (Request.ip != IP) {
         Response.status(403).send("Forbidden");
         return;
@@ -229,5 +231,5 @@ REST.post("/sendmessagehook", async (Request: { ip: any; body: any }, Response: 
 })
 
 const Server = REST.listen(Port, () => {
-    GDR.WriteLog(LogType.Rest, `Server ready, listening on port ${Server.address().port}`);
+    GDR.WriteLog(LogType.Rest, `Server ready, listening on port ${Port}`);
 })
