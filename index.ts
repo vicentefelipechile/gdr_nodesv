@@ -56,20 +56,29 @@ class GDRClient extends Client {
         console.log(CurrentTime + " -" + type + log)
     }
 
-    public async CheckChannelPermissions(channel: GuildTextBasedChannel): Promise<void> {
+    /**
+     * Check if on the specified channel have permissions to view, manage webhooks and send messages
+     * @param channel 
+     * @returns boolean
+     */
+    public async CheckChannelPermissions(channel: GuildTextBasedChannel): Promise<boolean> {
         let myself: GuildMember = await channel.guild.members.fetchMe();
         let permissions: PermissionsBitField = channel.permissionsFor(myself);
         if (!permissions.has(PermissionFlagsBits.ViewChannel)) {
-            throw new Error("Not allowed to view that channel");
+            GDR.WriteLog(LogType.Error, "Not allowed to view that channel");
+            return false;
         }
 
         if (!permissions.has(PermissionFlagsBits.ManageWebhooks)) {
-            throw new Error("Not allowed to manage webhooks to that channel");
+            GDR.WriteLog(LogType.Error, "Not allowed to manage webhooks to that channel");
+            return false;
         }
 
         if (!permissions.has(PermissionFlagsBits.SendMessages)) {
-            throw new Error("Not allowed to send messages to that channel");
+            GDR.WriteLog(LogType.Error, "Not allowed to send messages to that channel");
+            return false;
         }
+        return true;
     }
 
     public CheckMessage(message: Message): boolean {
@@ -138,7 +147,7 @@ GDR.on(Events.ClientReady, async() => {
         throw new Error("Specified Channel ID is not a Guild Text-based channel, impossible to read/send messages there");
     }
     GDR.WriteLog(LogType.Discord, `Reading and seending messages from channel: ${channel.name}`);
-    GDR.CheckChannelPermissions(channel);
+    if (!GDR.CheckChannelPermissions(channel)) { return; };
 
     const Webhooks = await channel.fetchWebhooks();
     GDR.WriteLog(LogType.Discord, `Getting Webhook`);
