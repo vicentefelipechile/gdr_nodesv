@@ -1,5 +1,6 @@
 /*==================================================
             Gmod Relay Discord - Node.js
+                 TypeScript Edition
 ==================================================*/
 
 import { Client, Events, GuildMember, GuildTextBasedChannel, Message, PermissionFlagsBits, PermissionsBitField, TextChannel, Webhook } from "discord.js"
@@ -28,23 +29,18 @@ enum LogType {
 
 
 /*==========================
-        Main Functions
+        Main Class
 ==========================*/
 
 class GDRClient extends Client {
-    constructor({ChannelID, Token, SteamKey, IP, Port}) {
+    constructor({ChannelID, SteamKey}) {
         super({intents: ["Guilds", "GuildMessages", "GuildWebhooks"]});
-
         this.ChannelID = ChannelID;
         this.SteamKey = SteamKey;
-        this.IP = IP;
-        this.Port = Port;
     }
 
     public ChannelID: any;
     public SteamKey: any;
-    public IP: any;
-    public Port: any;
     public Webhook: Webhook;
 
     public GetTime(): string {
@@ -92,8 +88,8 @@ class GDRClient extends Client {
         this.Webhook.send({username: username, content: content, avatarURL: imageURL});
     }
 
-    public async GetSteamAvatar(id64) {
-        let avatarURL = Cache.get(id64);
+    public async GetSteamAvatar(id64: string): Promise<string> {
+        let avatarURL = Cache.get(id64) as string;
         if (avatarURL) { return avatarURL; }
 
         const RequestOptions = this.GenerateSteamUserRequest(id64);
@@ -105,7 +101,7 @@ class GDRClient extends Client {
         return avatarURL;
     }
 
-    private GenerateSteamUserRequest(id64: any) {
+    private GenerateSteamUserRequest(id64: string): RequestOptions {
         return {
             hostname: `api.steampowered.com`,
             path: `/ISteamUser/GetPlayerSummaries/v0002/?key=${this.SteamKey}&steamids=${id64}`,
@@ -128,8 +124,16 @@ class GDRClient extends Client {
     }
 }
 
+
+
 let MessageList: string[][] = [];
-const GDR = new GDRClient({ChannelID: ChannelID, IP: IP, Port: Port, SteamKey: SteamKey, Token: Token});
+const GDR = new GDRClient({ChannelID: ChannelID, SteamKey: SteamKey});
+
+
+
+/*==========================
+         Discord bot
+==========================*/
 
 GDR.on(Events.ClientReady, async() => {
     GDR.WriteLog(LogType.Discord, "Client is ready, initializing the bot");
@@ -181,10 +185,13 @@ GDR.on(Events.Error, (error) => {
     GDR.WriteLog(LogType.Error, `Client Error: ${error}`);
 });
 
-/*==========================
-         Discord bot
-==========================*/
 GDR.login(Token);
+
+
+
+/*==========================
+          SERVER
+==========================*/
 
 REST.get("/getmessages", (Request: { ip: any }, Response: { status: (arg0: number) => { (): any; new(): any; send: { (arg0: string): void; new(): any } }; send: (arg0: string) => void }) => {
     if (Request.ip != IP) {
