@@ -8,5 +8,8 @@
         "discord.js": "^14.14.1",
         "express": "^4.17.1",
         "node-cache": "^5.1.2"
+    },
+    "devDependencies": {
+        "typescript": "^5.3.3"
     }
 }
