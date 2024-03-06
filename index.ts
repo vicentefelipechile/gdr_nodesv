@@ -25,8 +25,6 @@ enum LogType {
 	Rest = "\x1b[95m [REST] \x1b[39m",
 	Error = "\x1b[31m [Error] \x1b[39m"
 }
-const REGEX_IMAGE = /\/([^\/?#]+)\.(jpg|jpeg|gif|png)(?:$|[?#])/i;
-
 
 
 /*==========================
@@ -169,20 +167,19 @@ GDR.on(Events.ClientReady, async() => {
 });
 
 GDR.on(Events.MessageCreate, async (message) => {
-   if (!GDR.CheckMessage(message)) { return; }
+    if (!GDR.CheckMessage(message)) { return; }
    
-   const Author = await message.member?.fetch(true);
+    const Author = await message.member?.fetch(true);
     if (!Author) { return; }
 
-   let fileURL: string = message.attachments.first()?.url ?? message.stickers.first()?.url;
-   let fileName: string = fileURL.match(REGEX_IMAGE);
-   if (fileURL && fileName) {
+    let fileURL: string = message.attachments.first()?.url ?? message.stickers.first()?.url;
+    if (fileURL) {
         GDR.WriteLog(LogType.Chat, `${Author.displayName}: ${message.cleanContent}\n${fileURL}`);
         MessageList.push([Author.displayName, `${message.cleanContent}\n${fileURL}`]);
         return;
-   }
-   GDR.WriteLog(LogType.Chat, `${Author.displayName}: ${message.cleanContent}`);
-   MessageList.push([Author.displayName, `${message.cleanContent}`]);
+    }
+    GDR.WriteLog(LogType.Chat, `${Author.displayName}: ${message.cleanContent}`);
+    MessageList.push([Author.displayName, `${message.cleanContent}`]);
 });
 
 GDR.on(Events.Error, (error) => {
