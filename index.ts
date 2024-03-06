@@ -35,7 +35,7 @@ enum LogType {
 class GDRClient extends Client {
     public constructor({ChannelID, SteamKey}) {
         super({
-            intents: ["Guilds", "GuildMessages", "GuildWebhooks"]}
+            intents: ["Guilds", "GuildMessages", "GuildWebhooks", "MessageContent"]}
         );
         this.ChannelID = ChannelID;
         this.SteamKey = SteamKey;
@@ -152,13 +152,13 @@ GDR.on(Events.ClientReady, async() => {
     if (!channel.isTextBased()) {
         throw new Error("Specified Channel ID is not a Guild Text-based channel, impossible to read/send messages there");
     }
-    GDR.WriteLog(LogType.Discord, `Reading and seending messages from channel: ${channel.name}`);
+    GDR.WriteLog(LogType.Discord, `Reading and sending messages from channel: ${channel.name}`);
     if (!GDR.CheckChannelPermissions(channel)) { return; };
 
     const Webhooks = await channel.fetchWebhooks();
     GDR.WriteLog(LogType.Discord, `Getting Webhook`);
 
-    let Webhook = Webhooks.find((hook) => { hook.name === "GDR"; });
+    let Webhook = Webhooks.find((hook) => { hook.name == "GDR" });
     if (!Webhook) {
         GDR.WriteLog(LogType.Discord, `The Webhook doesn't exists, creating a new one`);
         Webhook = await channel.createWebhook({name: "GDR", reason: "GM Discord Relay Webhook"});
@@ -173,7 +173,7 @@ GDR.on(Events.MessageCreate, async (message) => {
    const Author = await message.member?.fetch(true);
     if (!Author) { return; }
 
-   let fileURL = message.attachments.first()?.url ?? message.stickers.first()?.url;
+   let fileURL: string = message.attachments.first()?.url ?? message.stickers.first()?.url;
    if (fileURL && (fileURL.endsWith(`.jpg`) || fileURL.endsWith(`.jpeg`) || fileURL.endsWith(`.png`) || fileURL.endsWith(`.gif`))) {
         GDR.WriteLog(LogType.Chat, `${Author.displayName}: ${message.cleanContent}\n${fileURL}`);
         MessageList.push([Author.displayName, `${message.cleanContent}\n${fileURL}`]);
