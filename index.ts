@@ -22,9 +22,10 @@ const DateObj = new Date();
 enum LogType {
 	Discord = "\x1b[31m [Discord] \x1b[39m",
 	Chat = "\x1b[36m [Chat] \x1b[39m",
-    Rest = "\x1b[95m [REST] \x1b[39m",
-    Error = "\x1b[31m [Error] \x1b[39m"
+	Rest = "\x1b[95m [REST] \x1b[39m",
+	Error = "\x1b[31m [Error] \x1b[39m"
 }
+const REGEX_IMAGE = /\/([^\/?#]+)\.(jpg|jpeg|gif|png)(?:$|[?#])/i;
 
 
 
@@ -174,7 +175,8 @@ GDR.on(Events.MessageCreate, async (message) => {
     if (!Author) { return; }
 
    let fileURL: string = message.attachments.first()?.url ?? message.stickers.first()?.url;
-   if (fileURL && (fileURL.endsWith(`.jpg`) || fileURL.endsWith(`.jpeg`) || fileURL.endsWith(`.png`) || fileURL.endsWith(`.gif`))) {
+   let fileName: string = fileURL.match(REGEX_IMAGE);
+   if (fileURL && fileName) {
         GDR.WriteLog(LogType.Chat, `${Author.displayName}: ${message.cleanContent}\n${fileURL}`);
         MessageList.push([Author.displayName, `${message.cleanContent}\n${fileURL}`]);
         return;
