@@ -200,6 +200,11 @@ REST.get("/getmessages", async (Request, Response) => {
         return;
     }
 
+    if (Request.method != "POST") {
+        Response.status(405).send("");
+        return;
+    }
+
     Response.send(JSON.stringify(MessageList));
     MessageList = [];
 })
