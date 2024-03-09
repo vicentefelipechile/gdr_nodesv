@@ -34,7 +34,8 @@ enum LogType {
 class GDRClient extends Client {
     public constructor({ChannelID, SteamKey}) {
         super({
-            intents: ["Guilds", "GuildMessages", "GuildWebhooks", "MessageContent"]}
+            allowedMentions: {repliedUser: false, parse: []},
+            intents: ["Guilds", "GuildMessages", "GuildWebhooks", "MessageContent"]},
         );
         this.ChannelID = ChannelID;
         this.SteamKey = SteamKey;
