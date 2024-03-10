@@ -208,7 +208,8 @@ REST.get("/getmessages", async (Request, Response) => {
 
 REST.use(json())
 REST.post("/sendmessage", async (Request, Response) => {
-    if (Request.ip != IP) {
+    const ipAddress = Request.ip.match(/(?:[0-9]{1,3}\.){3}[0-9]{1,3}/)[0];
+    if (ipAddress != IP) {
         Response.status(403).send("Forbidden");
         return;
     }
@@ -221,7 +222,8 @@ REST.post("/sendmessage", async (Request, Response) => {
 })
 
 REST.post("/sendmessagehook", async (Request, Response) => {
-    if (Request.ip != IP) {
+    const ipAddress = Request.ip.match(/(?:[0-9]{1,3}\.){3}[0-9]{1,3}/)[0];
+    if (ipAddress != IP) {
         Response.status(403).send("Forbidden");
         return;
     }
