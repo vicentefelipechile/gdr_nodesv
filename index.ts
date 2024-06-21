@@ -3,12 +3,13 @@
                  TypeScript Edition
 ==================================================*/
 
-import { Client, Events, GuildMember, GuildTextBasedChannel, Message, PermissionFlagsBits, PermissionsBitField, TextChannel, Webhook } from "discord.js"
+import { ApplicationCommandDataResolvable, Client, Collection, Events, Guild, GuildMember, GuildTextBasedChannel, Interaction, Message, PermissionFlagsBits, PermissionsBitField, TextChannel, Webhook } from "discord.js"
 import Express, { json } from "express"
 import NodeCache from "node-cache"
 import { RequestOptions, request } from 'http'
 import { ChannelID, Token, SteamKey, IP, Port } from "./config.json"
 import { URL } from "url"
+import { Commands, GDRCommand } from "./commands"
 
 
 
@@ -31,7 +32,7 @@ enum LogType {
         Main Class
 ==========================*/
 
-class GDRClient extends Client {
+export class GDRClient extends Client {
     public constructor({ChannelID, SteamKey}) {
         super({
             allowedMentions: {repliedUser: false, parse: []},
@@ -39,8 +40,10 @@ class GDRClient extends Client {
         );
         this.ChannelID = ChannelID;
         this.SteamKey = SteamKey;
+        console.log(this.Commands);
     }
 
+    public Commands: Collection<string, GDRCommand> = Commands;
     public ChannelID: string;
     public SteamKey: string;
     public Webhook: Webhook;
@@ -138,7 +141,7 @@ const GDR = new GDRClient({ChannelID: ChannelID, SteamKey: SteamKey});
 ==========================*/
 
 GDR.on(Events.ClientReady, async() => {
-    GDR.WriteLog(LogType.Discord, "Client is ready, initializing the bot");
+    GDR.WriteLog(LogType.Discord, `Client is ready as ${GDR.user.displayName}, initializing the bot`);
 
     let channel: TextChannel = await GDR.channels.cache.get(GDR.ChannelID)?.fetch(true) as TextChannel;
     if (!channel) {
@@ -157,17 +160,42 @@ GDR.on(Events.ClientReady, async() => {
 
     const Webhooks = await channel.fetchWebhooks();
     GDR.WriteLog(LogType.Discord, `Getting Webhook`);
-
-    let Webhook = Webhooks.find((hook) => { hook.name == "GDR" });
+    
+    let Webhook: Webhook|void = Webhooks.find((hook) => hook.name === "GDR");
     if (!Webhook) {
         GDR.WriteLog(LogType.Discord, `The Webhook doesn't exists, creating a new one`);
         Webhook = await channel.createWebhook({name: "GDR", reason: "GM Discord Relay Webhook"});
     }
     GDR.Webhook = Webhook;
+
+    let commands: ApplicationCommandDataResolvable[] = [];
+    GDR.WriteLog(LogType.Discord, `Getting Commands`);
+
+    GDR.Commands.forEach((Command: GDRCommand) => {
+        commands.push(Command.Data);
+    });
+
+    GDR.guilds.cache.forEach(async (guild: Guild) => {
+        await guild.commands.set(commands);
+    });
+
     GDR.WriteLog(LogType.Discord, `The Bot is ready`)
 });
 
-GDR.on(Events.MessageCreate, async (message) => {
+GDR.on(Events.InteractionCreate, async (interaction: Interaction) => {
+    if (!interaction.inGuild()) { return; }
+    if (!interaction.isChatInputCommand()) { return; }
+    
+    let Command: GDRCommand|void = GDR.Commands.get(interaction.commandName);
+    if (!Command) { return; }
+
+    Command.Execute({client: GDR, interaction: interaction}).catch((Error: Error) => {
+        GDR.WriteLog(LogType.Error, `Failed during execution of /${interaction.commandName}`);
+        GDR.WriteLog(LogType.Error, `${Error}`);
+    });
+})
+
+GDR.on(Events.MessageCreate, async (message: Message) => {
     if (!GDR.CheckMessage(message)) { return; }
    
     const Author = await message.member?.fetch(true);
