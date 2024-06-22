@@ -17,5 +17,5 @@ Allow Discord users to talk with in-game users on Garry's mod.
 6 - If hosting the Node server on the same network as the gmod server, remember to launch srcds with this parameter: ``-allowlocalhttp``
 
 ## How to run
-1 - On a terminal / cmd instance, cd into where you downloaded gdr_nodesv, and run **node index.js**\
+1 - On a terminal / cmd instance, cd into where you downloaded gdr_nodesv, and run **npm start**\
 2 - Run your Garry's Mod server.
