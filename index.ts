@@ -89,6 +89,7 @@ export class GDRClient extends Client {
     }
 
     public SendMessage(imageURL: string, username: string, content: string): void {
+        if (!this.Webhook) { return; }
         if (content.length <= 0) { return; }
         this.Webhook.send({username: username, content: content, avatarURL: imageURL});
     }
@@ -129,8 +130,25 @@ export class GDRClient extends Client {
     }
 }
 
+export type PlayerStatusInfo = {
+    name: string,
+    usergroup: string,
+    score: number,
+    time: number,
+    bot: boolean
+}
 
+export type ServerStatusInfo = {
+    hostname: string,
+    hostaddress: string,
+    gamemode: string,
+    map: string,
+    players: PlayerStatusInfo[],
+    maxplayers: number,
+    meta: any[]
+}
 
+export let ServerStatus: ServerStatusInfo;
 let MessageList: string[][] = [];
 const GDR = new GDRClient({ChannelID: ChannelID, SteamKey: SteamKey});
 
@@ -140,7 +158,7 @@ const GDR = new GDRClient({ChannelID: ChannelID, SteamKey: SteamKey});
          Discord bot
 ==========================*/
 
-GDR.on(Events.ClientReady, async() => {
+GDR.on(Events.ClientReady, async(): Promise<void> => {
     GDR.WriteLog(LogType.Discord, `Client is ready as ${GDR.user.displayName}, initializing the bot`);
 
     let channel: TextChannel = await GDR.channels.cache.get(GDR.ChannelID)?.fetch(true) as TextChannel;
@@ -182,7 +200,7 @@ GDR.on(Events.ClientReady, async() => {
     GDR.WriteLog(LogType.Discord, `The Bot is ready`)
 });
 
-GDR.on(Events.InteractionCreate, async (interaction: Interaction) => {
+GDR.on(Events.InteractionCreate, async (interaction: Interaction): Promise<void> => {
     if (!interaction.inGuild()) { return; }
     if (!interaction.isChatInputCommand()) { return; }
     
@@ -195,7 +213,7 @@ GDR.on(Events.InteractionCreate, async (interaction: Interaction) => {
     });
 })
 
-GDR.on(Events.MessageCreate, async (message: Message) => {
+GDR.on(Events.MessageCreate, async (message: Message): Promise<void> => {
     if (!GDR.CheckMessage(message)) { return; }
    
     const Author = await message.member?.fetch(true);
@@ -223,7 +241,7 @@ GDR.login(Token);
           SERVER
 ==========================*/
 
-REST.get("/getmessages", async (Request, Response) => {
+REST.get("/getmessages", async (Request, Response): Promise<void> => {
     const ipAddress = Request.ip.match(/(?:[0-9]{1,3}\.){3}[0-9]{1,3}/)[0];
     if (ipAddress != IP) {
         Response.status(403).send("Forbidden");
@@ -232,34 +250,47 @@ REST.get("/getmessages", async (Request, Response) => {
 
     Response.send(JSON.stringify(MessageList));
     MessageList = [];
-})
+});
 
-REST.use(json())
-REST.post("/sendmessage", async (Request, Response) => {
+REST.use(json());
+REST.post("/sendmessage", async (Request, Response): Promise<void> => {
     const ipAddress = Request.ip.match(/(?:[0-9]{1,3}\.){3}[0-9]{1,3}/)[0];
     if (ipAddress != IP) {
         Response.status(403).send("Forbidden");
         return;
     }
 
-    var MsgInfo = Request.body;
+    let MsgInfo = Request.body;
     Response.end();
 
-    var sAvatar = await GDR.GetSteamAvatar(MsgInfo[0]) as string;
+    let sAvatar = await GDR.GetSteamAvatar(MsgInfo[0]) as string;
     GDR.SendMessage(sAvatar, MsgInfo[1], MsgInfo[2]);
-})
+});
 
-REST.post("/sendmessagehook", async (Request, Response) => {
+REST.post("/sendmessagehook", async (Request, Response): Promise<void> => {
     const ipAddress = Request.ip.match(/(?:[0-9]{1,3}\.){3}[0-9]{1,3}/)[0];
     if (ipAddress != IP) {
         Response.status(403).send("Forbidden");
         return;
     }
 
-    var MsgInfo = Request.body;
+    let MsgInfo = Request.body;
     Response.end();
     GDR.SendMessage(MsgInfo[0], MsgInfo[1], MsgInfo[2]);
-})
+});
+
+REST.post("/status", async(Request, Response): Promise<void> => {
+    const ipAddress = Request.ip.match(/(?:[0-9]{1,3}\.){3}[0-9]{1,3}/)[0];
+    if (ipAddress != IP) {
+        Response.status(403).send("Forbidden");
+        return;
+    }
+
+    let StatusInfo = Request.body;
+    ServerStatus = StatusInfo as ServerStatusInfo;
+    console.log(ServerStatus);
+    Response.end();
+});
 
 const Server = REST.listen(Port, () => {
     GDR.WriteLog(LogType.Rest, `Server ready, listening on port ${Port}`);
