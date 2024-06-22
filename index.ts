@@ -12,7 +12,6 @@ import { URL } from "url"
 import { Commands, GDRCommand } from "./commands"
 
 
-
 /*==========================
         Main Constants
 ==========================*/
@@ -151,7 +150,10 @@ export let ServerStatus: ServerStatusInfo;
 let MessageList: string[][] = [];
 const GDR = new GDRClient({ChannelID: ChannelID, SteamKey: SteamKey});
 
-
+process.on("unhandledRejection", (error) => {
+    GDR.WriteLog(LogType.Error, `Unhandled Rejection`);
+    GDR.WriteLog(LogType.Error, `${error}`);
+});
 
 /*==========================
          Discord bot
