@@ -8,7 +8,7 @@
         "start": "ts-node index.ts"
     },
     "dependencies": {
-        "discord.js": "^14.14.1",
+        "discord.js": "^14.15.3",
         "express": "^4.17.1",
         "node-cache": "^5.1.2"
     },
