@@ -40,7 +40,6 @@ export class GDRClient extends Client {
         );
         this.ChannelID = ChannelID;
         this.SteamKey = SteamKey;
-        console.log(this.Commands);
     }
 
     public Commands: Collection<string, GDRCommand> = Commands;
@@ -288,7 +287,6 @@ REST.post("/status", async(Request, Response): Promise<void> => {
 
     let StatusInfo = Request.body;
     ServerStatus = StatusInfo as ServerStatusInfo;
-    console.log(ServerStatus);
     Response.end();
 });
 
