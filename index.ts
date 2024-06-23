@@ -28,6 +28,15 @@ enum LogType {
 
 
 /*==========================
+        Functions
+==========================*/
+
+function IsValidAddress(address: string): boolean {
+    const ipAddress = address.match(/(?:[0-9]{1,3}\.){3}[0-9]{1,3}/)[0];
+    return ipAddress == IP;
+}
+
+/*==========================
         Main Class
 ==========================*/
 
@@ -146,7 +155,13 @@ export type ServerStatusInfo = {
     meta: any[]
 }
 
+export type GmodCommandExecution = {
+    command: string
+}
+
 export let ServerStatus: ServerStatusInfo;
+export let GmodCommands: GmodCommandExecution;
+
 let MessageList: string[][] = [];
 const GDR = new GDRClient({ChannelID: ChannelID, SteamKey: SteamKey});
 
@@ -243,23 +258,23 @@ GDR.login(Token);
 ==========================*/
 
 REST.get("/getmessages", async (Request, Response): Promise<void> => {
-    const ipAddress = Request.ip.match(/(?:[0-9]{1,3}\.){3}[0-9]{1,3}/)[0];
-    if (ipAddress != IP) {
-        Response.status(403).send("Forbidden");
-        return;
-    }
+    if ( !IsValidAddress(Request.ip) ) { Response.status(403).send("Forbidden"); return; }
 
     Response.send(JSON.stringify(MessageList));
     MessageList = [];
 });
 
+REST.get("/command", async (Request, Response): Promise<void> => {
+    if ( !IsValidAddress(Request.ip) ) { Response.status(403).send("Forbidden"); return; }
+    if ( GmodCommands.command == "none" ) { Response.status(204).send("No Content") ; return;}
+
+    Response.send(JSON.stringify({cmd: GmodCommands.command}))
+    GmodCommands.command = "none"
+})
+
 REST.use(json());
 REST.post("/sendmessage", async (Request, Response): Promise<void> => {
-    const ipAddress = Request.ip.match(/(?:[0-9]{1,3}\.){3}[0-9]{1,3}/)[0];
-    if (ipAddress != IP) {
-        Response.status(403).send("Forbidden");
-        return;
-    }
+    if ( !IsValidAddress(Request.ip) ) { Response.status(403).send("Forbidden"); return; }
 
     let MsgInfo = Request.body;
     Response.end();
@@ -269,11 +284,7 @@ REST.post("/sendmessage", async (Request, Response): Promise<void> => {
 });
 
 REST.post("/sendmessagehook", async (Request, Response): Promise<void> => {
-    const ipAddress = Request.ip.match(/(?:[0-9]{1,3}\.){3}[0-9]{1,3}/)[0];
-    if (ipAddress != IP) {
-        Response.status(403).send("Forbidden");
-        return;
-    }
+    if ( !IsValidAddress(Request.ip) ) { Response.status(403).send("Forbidden"); return; }
 
     let MsgInfo = Request.body;
     Response.end();
@@ -281,11 +292,7 @@ REST.post("/sendmessagehook", async (Request, Response): Promise<void> => {
 });
 
 REST.post("/status", async(Request, Response): Promise<void> => {
-    const ipAddress = Request.ip.match(/(?:[0-9]{1,3}\.){3}[0-9]{1,3}/)[0];
-    if (ipAddress != IP) {
-        Response.status(403).send("Forbidden");
-        return;
-    }
+    if ( !IsValidAddress(Request.ip) ) { Response.status(403).send("Forbidden"); return; }
 
     let StatusInfo = Request.body;
     ServerStatus = StatusInfo as ServerStatusInfo;
