@@ -1,5 +1,5 @@
-import { ApplicationCommandData, GuildMember, ChatInputCommandInteraction, Collection, EmbedBuilder } from "discord.js";
-import { GDRClient, PlayerStatusInfo, ServerStatus, GmodCommands } from ".";
+import { ApplicationCommandData, GuildMember, ChatInputCommandInteraction, Collection, EmbedBuilder, ApplicationCommandOptionType } from "discord.js";
+import { GDRClient, PlayerStatusInfo, ServerStatus, SetGmodCommand } from ".";
 
 interface CommandRunOptions {client: GDRClient, interaction: ChatInputCommandInteraction}
 type CommandExecuteFunction = (options: CommandRunOptions) => Promise<any>;
@@ -98,25 +98,29 @@ Modo de juego: ${gamemode}
         ID: "command",
         Data: {
             name: "command",
-            description: "Send a command to gmod server"
+            description: "Send a command to gmod server",
+            options: [
+                {
+                    name: "cmd",
+                    type: ApplicationCommandOptionType.String,
+                    description: "The command to send to the gmod server",
+                    required: true
+                }
+            ]
         },
         async Execute({client, interaction}) {
             // Verificar si el usuario tiene el rol requerido
             const requiredRoleID = "884222069032759302"; // Reemplaza esto con el ID de tu rol
             const member = interaction.member as GuildMember;
             
-            if (!member.roles.cache.has(requiredRoleID)) {
+            if (!member.roles.cache.some(role => role.id === requiredRoleID)) {
                 interaction.reply({content: "No tienes permiso para usar este comando.", ephemeral: true});
                 return;
             }
 
-            const command = interaction.options.getString("command") ?? "none"
-            if ( command === "none" ) {
-                interaction.reply({content: "No"})
-                return;
-            }
+            const command = await interaction.options.getString("cmd", true)
 
-            GmodCommands.command = command
+            SetGmodCommand(command)
             interaction.reply({content: "Listo"})
         }
     }

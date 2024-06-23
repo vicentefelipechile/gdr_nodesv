@@ -155,12 +155,16 @@ export type ServerStatusInfo = {
     meta: any[]
 }
 
-export type GmodCommandExecution = {
-    command: string
+export type ServerCommand = {
+    cmd: string
 }
 
 export let ServerStatus: ServerStatusInfo;
-export let GmodCommands: GmodCommandExecution;
+export let GmodCommand: ServerCommand = {cmd: "none"};
+
+export function SetGmodCommand(cmd: string) {
+    GmodCommand.cmd = cmd;
+}
 
 let MessageList: string[][] = [];
 const GDR = new GDRClient({ChannelID: ChannelID, SteamKey: SteamKey});
@@ -266,10 +270,10 @@ REST.get("/getmessages", async (Request, Response): Promise<void> => {
 
 REST.get("/command", async (Request, Response): Promise<void> => {
     if ( !IsValidAddress(Request.ip) ) { Response.status(403).send("Forbidden"); return; }
-    if ( GmodCommands.command == "none" ) { Response.status(204).send("No Content") ; return;}
+    if ( GmodCommand.cmd == "none" ) { Response.status(204).send("No Content") ; return;}
 
-    Response.send(JSON.stringify({cmd: GmodCommands.command}))
-    GmodCommands.command = "none"
+    Response.send(JSON.stringify({cmd: GmodCommand.cmd}))
+    SetGmodCommand("none");
 })
 
 REST.use(json());
