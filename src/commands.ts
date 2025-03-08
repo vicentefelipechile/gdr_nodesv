@@ -217,15 +217,7 @@ const CommandsDefinition: GDRCommand[] = [
             },
         },
         async Execute({client, interaction}) {
-            const requiredRoleID = "884222069032759302"; // Reemplaza esto con el ID de tu rol
-            const member = interaction.member as GuildMember;
-            if (!member.roles.cache.some(role => role.id === requiredRoleID)) {
-                interaction.reply({content: "No tienes permiso para usar este comando.", flags: MessageFlags.Ephemeral});
-                return;
-            }
-
-            const command: string = `say "Coleccion del servidor: ${ENV.ADDON_COLLECTION_LINK}"`
-            SetGmodCommand(command);
+            interaction.reply({content: `Coleccion del servidor:\n${ENV.ADDON_COLLECTION_LINK}`});
         }
     },
     {
