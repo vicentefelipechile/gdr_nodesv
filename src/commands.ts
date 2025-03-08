@@ -207,6 +207,20 @@ const CommandsDefinition: GDRCommand[] = [
         }
     },
     {
+        ID: "addons",
+        Data: {
+            name: "addons",
+            description: "Gets a link to the server's addon collection",
+            descriptionLocalizations: {
+                ["es-ES"]: "Obten un enlace de la coleccion de addons del servidor",
+                ["es-419"]: "Obten un enlace de la coleccion de addons del servidor"
+            },
+        },
+        async Execute({client, interaction}) {
+            interaction.reply({content: `Coleccion del servidor:\n${ENV.ADDON_COLLECTION_LINK}`, flags: MessageFlags.Ephemeral});
+        }
+    },
+    {
         ID: "player",
         Data: {
             name: "player",
